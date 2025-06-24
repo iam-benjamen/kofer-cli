@@ -13,18 +13,15 @@ import java.security.spec.KeySpec;
  * The Encryption class provides utility methods for securely encrypting
  * and decrypting objects to and from files using the AES-GCM encryption
  * algorithm with password-based key generation.
- *
  * The class includes methods to:
  * - Generate a cryptographically secure salt.
  * - Generate AES keys from a password and salt using the PBKDF2 algorithm.
  * - Encrypt an object to a file using AES-GCM.
  * - Decrypt an object from a file using AES-GCM.
- *
  * It utilizes the following cryptographic principles:
  * - AES-GCM for authenticated encryption to ensure both confidentiality
  *   and integrity of data.
  * - PBKDF2 for deriving a secure key from a password.
- *
  * Note:
  * - A unique salt and initialization vector (IV) are generated for each
  *   encryption and stored in the file alongside the encrypted data.
@@ -73,6 +70,9 @@ public class Encryption {
             fos.write(salt);
             fos.write(iv);
             oos.writeObject(data);
+        }catch (Exception e){
+            System.err.println("Failed to encrypt data: " + e.getMessage());
+            throw new RuntimeException("Failed to encrypt data", e);
         }
     }
 
@@ -89,6 +89,9 @@ public class Encryption {
             try (CipherInputStream cis = new CipherInputStream(fis, cipher);
                  ObjectInputStream ois = new ObjectInputStream(cis)) {
                 return ois.readObject();
+            } catch (Exception e) {
+                System.err.println("Failed to decrypt data: " + e.getMessage());
+                return null;
             }
         }
     }

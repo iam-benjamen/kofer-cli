@@ -5,6 +5,7 @@ import kofer.model.Transaction;
 import kofer.store.DataStore;
 import kofer.util.TransactionType;
 
+import java.io.File;
 import java.time.LocalDate;
 import java.util.Scanner;
 
@@ -16,18 +17,45 @@ import java.util.Scanner;
  * display transaction summaries, and exit the application.
  */
 public class KoferCLI {
-    private final Scanner scanner;
-    private final DataStore dataStore;
-    private final TransactionsManager transactionManager;
 
-    public KoferCLI(DataStore dataStore) {
+    private final Scanner scanner;
+    private final TransactionsManager transactionsManager;
+
+
+    public KoferCLI() throws Exception {
         this.scanner = new Scanner(System.in);
-        this.dataStore = dataStore;
-        this.transactionManager = new TransactionsManager(dataStore);
+
+        handlePasswordSetup();
+        DataStore dataStore = new DataStore();
+        this.transactionsManager = new TransactionsManager(dataStore);
+    }
+
+
+    private void handlePasswordSetup() {
+        File dataFile = new File(DataStore.APP_DATA_FILE);
+
+        if (dataFile.exists()) {
+            while (true) {
+                System.out.print("Enter your password: ");
+                String password = scanner.nextLine();
+
+                DataStore.setPassword(password);
+                try {
+                    DataStore.loadData();
+                    break;
+                } catch (Exception e) {
+                    System.out.println("Invalid password. Try again.");
+                }
+            }
+        } else {
+            System.out.print("Enter your password: ");
+            String password = scanner.nextLine();
+            DataStore.setPassword(password);
+        }
     }
 
     public void start() {
-        System.out.println("\nWelcome to Kofer CLI 🪙\n");
+        System.out.println("\nWelcome to Kofer CLI\n");
 
         boolean running = true;
         while (running) {
@@ -43,12 +71,7 @@ public class KoferCLI {
             }
         }
 
-        try {
-            dataStore.saveData(getPassword());
-            System.out.println("\nGoodbye! Your data has been saved securely.");
-        } catch (Exception e) {
-            System.err.println("Failed to save data: " + e.getMessage());
-        }
+
     }
 
     private void printMenu() {
@@ -61,7 +84,7 @@ public class KoferCLI {
     }
 
     private void showTransactions() {
-        transactionManager.getAllTransaction();
+        transactionsManager.getAllTransaction().forEach(System.out::println);
     }
 
     private void addTransaction() {
@@ -81,22 +104,18 @@ public class KoferCLI {
         TransactionType type = TransactionType.valueOf(scanner.nextLine().toUpperCase());
 
         Transaction transaction = new Transaction(date, amount, type, category, description);
-        transactionManager.addTransaction(transaction);
+
+        transactionsManager.addTransaction(transaction);
         System.out.println("Transaction added successfully!");
     }
 
     private void showSummary() {
-        double credit = transactionManager.getTotalByType(TransactionType.CREDIT);
-        double debit = transactionManager.getTotalByType(TransactionType.DEBIT);
+        double credit = transactionsManager.getTotalByType(TransactionType.CREDIT);
+        double debit = transactionsManager.getTotalByType(TransactionType.DEBIT);
 
         System.out.printf("Total Credit: %.2f\n", credit);
         System.out.printf("Total Debit: %.2f\n", debit);
         System.out.printf("Balance: %.2f\n", credit - debit);
     }
 
-    private String getPassword() {
-        // In production, use a password field with masking
-        System.out.print("\nEnter your encryption password to save: ");
-        return scanner.nextLine();
-    }
 }
