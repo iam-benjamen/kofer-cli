@@ -1,5 +1,7 @@
 package kofer.util;
 
+import kofer.exception.KoferException;
+
 import javax.crypto.*;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
@@ -71,8 +73,7 @@ public class Encryption {
             fos.write(iv);
             oos.writeObject(data);
         }catch (Exception e){
-            System.err.println("Failed to encrypt data: " + e.getMessage());
-            throw new RuntimeException("Failed to encrypt data", e);
+            throw new KoferException("Failed to encrypt data", e);
         }
     }
 
@@ -90,7 +91,6 @@ public class Encryption {
                  ObjectInputStream ois = new ObjectInputStream(cis)) {
                 return ois.readObject();
             } catch (Exception e) {
-                System.err.println("Failed to decrypt data: " + e.getMessage());
                 return null;
             }
         }

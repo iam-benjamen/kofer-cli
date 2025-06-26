@@ -1,5 +1,6 @@
 package kofer.store;
 
+import kofer.exception.KoferException;
 import kofer.model.Loan;
 import kofer.model.Transaction;
 import kofer.util.Encryption;
@@ -21,9 +22,9 @@ public class DataStore implements Serializable {
     private final List<Transaction> transactions;
     private final List<Loan> loans;
 
-    public DataStore() throws Exception {
+    public DataStore() throws KoferException {
         if(password == null) {
-            throw new Exception("Password cannot be null");
+            throw new KoferException("Password cannot be null");
         }
 
         try{
@@ -44,13 +45,13 @@ public class DataStore implements Serializable {
 
                 saveData();
             }
-        }catch (Exception e){
-            throw new Exception("Failed to load data store: " + e.getMessage(), e);
+        } catch (Exception e){
+            throw new KoferException("Failed to load data store: " + e.getMessage(), e);
         }
 
     }
 
-    public static DataStore loadData() throws Exception {
+    public static DataStore loadData() throws KoferException {
         File file = new File(APP_DATA_FILE);
         if (!file.exists()) {
             return null;
@@ -59,15 +60,15 @@ public class DataStore implements Serializable {
         try {
             Object decrypted = Encryption.decryptFromFile(password, file);
             if (!(decrypted instanceof DataStore)) {
-                throw new Exception("Corrupted data store: invalid format");
+                throw new KoferException("Corrupted data store: invalid format");
             }
             return (DataStore) decrypted;
         } catch (Exception e) {
-            throw new Exception("Failed to load data store: " + e.getMessage(), e);
+            throw new KoferException("Failed to load data store: " + e.getMessage(), e);
         }
     }
 
-    public void saveData() throws Exception {
+    public void saveData() throws KoferException {
         File file = new File(APP_DATA_FILE);
 
         if (!file.getParentFile().exists()) {
@@ -77,7 +78,7 @@ public class DataStore implements Serializable {
         try{
             Encryption.encryptToFile(this, password, file);
         } catch (Exception e){
-            throw new Exception("Failed to save data : " + e.getMessage(), e);
+            throw new KoferException("Failed to save data : " + e.getMessage(), e);
         }
     }
 
@@ -111,7 +112,7 @@ public class DataStore implements Serializable {
      * @throws IllegalArgumentException if the provided transaction is null.
      * @throws RuntimeException if there is an error while saving the data to persistent storage.
      */
-    public void addTransaction(Transaction transaction) {
+    public void addTransaction(Transaction transaction) throws IllegalArgumentException, KoferException {
         if(transaction == null){
             throw new IllegalArgumentException("Transaction cannot be null");
         }
@@ -121,9 +122,8 @@ public class DataStore implements Serializable {
         try{
             saveData();
         }catch (Exception e){
-            System.err.println("Failed to save data: " + e.getMessage());
             transactions.remove(transaction);
-            throw new RuntimeException(e);
+            throw new KoferException("Failed to persist data", e);
         }
     }
 
@@ -155,7 +155,7 @@ public class DataStore implements Serializable {
         } catch (Exception e) {
             System.err.println("Failed to save loan: " + e.getMessage());
             loans.remove(loan);
-            throw new RuntimeException("Failed to persist loan", e);
+            throw new KoferException("Failed to persist loan", e);
         }
 
     }

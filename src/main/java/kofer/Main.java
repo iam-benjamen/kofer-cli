@@ -1,6 +1,7 @@
 package kofer;
 
 import kofer.cli.KoferCLI;
+import kofer.exception.KoferException;
 
 import java.util.Scanner;
 
@@ -12,9 +13,12 @@ public class Main {
             KoferCLI cli = new KoferCLI();
             cli.start();
             scanner.close();
-        } catch (Exception e) {
+        } catch (KoferException e){
             System.err.println("Error: " + e.getMessage());
-            throw new RuntimeException(e);
+            System.exit(1);
+        } catch (Exception e){
+            System.err.println("Unexpected error: " + e.getMessage());
+            System.exit(1);
         }
     }
 }

@@ -1,5 +1,6 @@
 package kofer.cli;
 
+import kofer.exception.KoferException;
 import kofer.manager.TransactionsManager;
 import kofer.model.Transaction;
 import kofer.store.DataStore;
@@ -7,6 +8,7 @@ import kofer.util.TransactionType;
 
 import java.io.File;
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.Scanner;
 
 /**
@@ -21,15 +23,13 @@ public class KoferCLI {
     private final Scanner scanner;
     private final TransactionsManager transactionsManager;
 
-
-    public KoferCLI() throws Exception {
+    public KoferCLI() throws KoferException {
         this.scanner = new Scanner(System.in);
 
         handlePasswordSetup();
         DataStore dataStore = new DataStore();
         this.transactionsManager = new TransactionsManager(dataStore);
     }
-
 
     private void handlePasswordSetup() {
         File dataFile = new File(DataStore.APP_DATA_FILE);
@@ -70,8 +70,6 @@ public class KoferCLI {
                 default -> System.out.println("Invalid option. Try again.");
             }
         }
-
-
     }
 
     private void printMenu() {
@@ -91,17 +89,43 @@ public class KoferCLI {
         System.out.print("Enter description: ");
         String description = scanner.nextLine();
 
-        System.out.print("Enter category: ");
+        System.out.print("Enter category, e.g. groceries, utilities: ");
         String category = scanner.nextLine();
 
         System.out.print("Enter amount: ");
-        double amount = Double.parseDouble(scanner.nextLine());
+        double amount;
 
-        System.out.print("Enter date (yyyy-mm-dd): ");
-        LocalDate date = LocalDate.parse(scanner.nextLine());
+        while(true) {
+            try {
+                amount = Double.parseDouble(scanner.nextLine());
+                break;
+            } catch (NumberFormatException e){
+                System.out.println("Invalid amount. Please enter a valid number.");
+            }
+        }
+
+        System.out.print("Enter date (YYYY-MM-DD): ");
+        LocalDate date;
+        while(true) {
+            try {
+                date = LocalDate.parse(scanner.nextLine());
+                break;
+            } catch (DateTimeParseException e) {
+                System.out.println("Invalid date. Please enter a valid date in the format YYYY-MM-DD.");
+            }
+        }
 
         System.out.print("Enter type (CREDIT, DEBIT): ");
-        TransactionType type = TransactionType.valueOf(scanner.nextLine().toUpperCase());
+        TransactionType type;
+        while(true) {
+            try {
+                type = TransactionType.valueOf(scanner.nextLine().toUpperCase());
+                break;
+            } catch (IllegalArgumentException e) {
+                System.out.println("Invalid type. Please enter a valid type (CREDIT, DEBIT or LOAN).");
+            }
+        }
+
 
         Transaction transaction = new Transaction(date, amount, type, category, description);
 
@@ -117,5 +141,4 @@ public class KoferCLI {
         System.out.printf("Total Debit: %.2f\n", debit);
         System.out.printf("Balance: %.2f\n", credit - debit);
     }
-
 }

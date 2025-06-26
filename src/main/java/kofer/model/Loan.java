@@ -1,5 +1,7 @@
 package kofer.model;
 
+import kofer.exception.KoferException;
+
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -34,59 +36,72 @@ public class Loan implements Serializable {
     public String getId() {
         return id;
     }
+
     public String getLenderName() {
         return lenderName;
     }
+
     public double getAmountBorrowed() {
         return amountBorrowed;
     }
+
     public double getAmountRepaid() {
         return amountRepaid;
     }
+
     public LocalDate getDateBorrowed() {
         return dateBorrowed;
     }
+
     public String getDescription() {
         return description;
     }
+
     public List<Repayment> getRepayments() {
         return repayments;
     }
+
     public boolean isClosed() {
         return isClosed;
     }
 
     public void addRepayment(Repayment repayment) {
-        // Validate the repayment before adding
-        if (isClosed) {
-            throw new IllegalStateException("Cannot add repayment to a closed loan.");
-        }
-        
-        // Validate repayment details
-        if (repayment.getAmount() <= 0) {
-            throw new IllegalArgumentException("Repayment amount must be positive.");
-        }
 
-        // Check if repayment exceeds the remaining amount
-        if (getRemainingAmount() < repayment.getAmount()) {
-            throw new IllegalArgumentException("Repayment exceeds remaining loan amount.");
-        }
+        try {
 
-        // Validate repayment date
-        if (repayment.getDate().isBefore(dateBorrowed)) {
-            throw new IllegalArgumentException("Repayment date cannot be before the loan date.");
-        }
+            // Validate the repayment before adding
+            if (isClosed) {
+                throw new IllegalStateException("Cannot add repayment to a closed loan.");
+            }
 
-        // Check if the repayment date is in the future
-        if (repayment.getDate().isAfter(LocalDate.now())) {
-            throw new IllegalArgumentException("Repayment date cannot be in the future.");
-        }
+            // Validate repayment details
+            if (repayment.getAmount() <= 0) {
+                throw new KoferException("Repayment amount must be positive.");
+            }
 
-        // Add the repayment to the list and update the total repaid amount
-        repayments.add(repayment);
-        amountRepaid += repayment.getAmount();
-        if (getRemainingAmount() <= 0) {
-            markClosed();
+            // Check if repayment exceeds the remaining amount
+            if (getRemainingAmount() < repayment.getAmount()) {
+                throw new KoferException("Repayment exceeds remaining loan amount.");
+            }
+
+            // Validate repayment date
+            if (repayment.getDate().isBefore(dateBorrowed)) {
+                throw new KoferException("Repayment date cannot be before the loan date.");
+            }
+
+            // Check if the repayment date is in the future
+            if (repayment.getDate().isAfter(LocalDate.now())) {
+                throw new KoferException("Repayment date cannot be in the future.");
+            }
+
+            // Add the repayment to the list and update the total repaid amount
+            repayments.add(repayment);
+            amountRepaid += repayment.getAmount();
+            if (getRemainingAmount() <= 0) {
+                markClosed();
+            }
+        } catch (Exception e) {
+            throw new KoferException("Failed to add repayment: " + e.getMessage(), e);
         }
     }
  
@@ -96,7 +111,7 @@ public class Loan implements Serializable {
  
     public void markClosed() {
         if (isClosed) {
-            throw new IllegalStateException("Loan is already closed.");
+            throw new KoferException("Loan is already closed.");
         }
         isClosed = true;
     }
