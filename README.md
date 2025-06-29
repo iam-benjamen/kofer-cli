@@ -1,75 +1,99 @@
-# Kofer - Personal Finance CLI Manager
+# Kofer CLI
 
-Kofer is a secure command-line interface (CLI) tool designed for managing personal finances on Linux systems. It provides a simple yet powerful way to track expenses, income, and loans while keeping your financial data encrypted locally.
-
-Built with privacy and simplicity in mind. It allows you to manage your finances directly from your terminal. All data is stored locally and encrypted using AES encryption, ensuring your financial information remains private and secure.
+A command-line personal finance management tool built in Java. Kofer provides efficient transaction and loan tracking with local data persistence.
 
 ## Features
 
-- **Transaction Management**
-    - Add income and expense transactions
-    - Categorize transactions (e.g., groceries, utilities)
-    - View transaction history
-    - Get financial summaries
+- **Transaction Management**: Record income/expenses with categorization and automatic type detection
+- **Loan Management**: Track borrowed amounts, repayments, and outstanding balances
+- **Financial Summaries**: Comprehensive reporting including net worth calculations
+- **Local Storage**: Serialized data persistence with system-level security
+- **CLI & Interactive Modes**: Both command-line arguments and interactive menu support
 
-- **Loan Management**
-    - Record loans with lender details
-    - Track borrowed amounts
-    - Monitor repayment progress
-    - View remaining balances
-
-- **Secure Data Storage**
-    - AES encryption for all stored data
-    - Password-protected access
-    - Local storage with no external dependencies
-
-## Getting Started
+## Installation
 
 ### Prerequisites
 
-- Java 20 or higher
-- Linux-based operating system
-- Maven (for building from source)
+- Java 11+
+- Gradle (included via wrapper)
 
-### Installation
+### Build & Run
 
-1. Clone the repository:
 ```bash
-git clone https://github.com/iam-benjamen/kofer.git
-cd kofer
-```
-2. Build the project:
-``` bash
-mvn clean package
-```
-3. Run the application:
-``` bash
-java -jar target/kofer.jar
+git clone <repository-url>
+cd kofer-cli
+./gradlew build
+./gradlew run
 ```
 
-### First Run
-1. When you first run Kofer, you'll be prompted to create a password
-2. This password will be used to encrypt your data
-3. Make sure to remember this password as it cannot be recovered
+## Usage
 
-## Project Structure
-``` 
-kofer/
-├── src/
-│   ├── main/
-│   │   ├── java/
-│   │   │   ├── cli/       # CLI interface
-│   │   │   ├── manager/   # Business logic
-│   │   │   ├── model/     # Data models
-│   │   │   ├── store/     # Data persistence
-│   │   │   └── util/      # Utilities
-│   │   └── resources/
-│   └── test/              # Test cases
-└── pom.xml
+### Command Line Interface
+
+```bash
+# Add transactions
+kofer add transaction 50.00 grocery "Weekly shopping"
+kofer add transaction -25.50 utilities "Electric bill"
+
+# Manage loans
+kofer add loan 1000.00 "John Doe" "Emergency loan"
+kofer repay loan <loan-id> 200.00 "Partial payment"
+
+# View data
+kofer show transactions
+kofer show loans
+kofer summary
+
+# Interactive mode
+kofer interactive
+
+# Help
+kofer help
 ```
-## Future Plans
-- Export data to CSV format
-- Monthly and yearly reports
-- Budget planning features
-- Loan management system
-- Transaction categorization improvements
+
+### Transaction Types
+
+- **Positive amounts**: Income/credits
+- **Negative amounts**: Expenses/debits
+- **Categories**: Arbitrary strings for organization
+
+## Architecture
+
+```text
+src/main/java/kofer/
+├── cli/           # Command-line interface and error handling
+├── manager/       # Business logic (TransactionsManager, LoanManager)
+├── model/         # Domain models (Transaction, Loan, Repayment)
+├── store/         # Data persistence (DataStore)
+├── util/          # Utilities and enums
+└── exception/     # Custom exception hierarchy
+```
+
+### Key Components
+
+- **CLI Layer**: Argument parsing, command routing, user interaction
+- **Manager Layer**: Business logic and data validation
+- **Model Layer**: Domain entities with business rules
+- **Store Layer**: Serialized data persistence to `~/.kofer/kofer.dat`
+- **Exception Handling**: Structured error management with user-friendly messages
+
+## Data Storage
+
+- **Location**: `~/.kofer/kofer.dat`
+- **Format**: Java serialization
+- **Security**: System-level file permissions (no encryption)
+- **Backup**: Manual file copying recommended
+
+## Development
+
+### Error Handling
+
+- Custom exception hierarchy for different error types
+- Debug mode: `kofer --debug <command>`
+- Centralized error handling with user-friendly messages
+
+### Testing
+
+```bash
+./gradlew test
+```
